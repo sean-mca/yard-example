@@ -1,0 +1,38 @@
+type: glue
+imports:
+  - name: "col"
+    from: "pyspark.sql.functions"
+sources:
+  - name: orders
+    type: s3
+    format: parquet
+    path: "s3://my-bucket-${account.id}/raw/orders/"
+  - name: customers
+    type: jdbc
+    connection_url: "jdbc:postgresql://my-rds.${region.id}.rds.amazonaws.com:5432/mydb"
+    table: "public.customers"
+    secret_id: "prod/rds/mydb-credentials"
+transforms:
+  - type: filter
+    source: orders
+    condition: "col('status') != 'cancelled'"
+  - type: join
+    left: orders
+    right: customers
+    on: customer_id
+    how: left
+    output: enriched
+  - type: drop_columns
+    source: enriched
+    columns:
+      - debug_flag
+      - internal_id
+sink:
+  source: enriched
+  type: s3
+  format: parquet
+  path: "s3://my-bucket-${account.id}/curated/enriched_orders/"
+  mode: overwrite
+  partition_by:
+    - year
+    - month

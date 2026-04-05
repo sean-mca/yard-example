@@ -1,0 +1,5 @@
+---
+project: yard-test-init
+state:
+  type: local
+  path: .yard/state.json

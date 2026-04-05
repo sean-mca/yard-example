@@ -1,0 +1,25 @@
+type: glue
+sources:
+  - name: orders
+    type: s3
+    format: parquet
+    path: "s3://my-bucket-${account.id}/raw/orders/"
+  - name: customers
+    type: jdbc
+    connection_url: "jdbc:postgresql://my-rds.${region.id}.rds.amazonaws.com:5432/mydb"
+    table: "public.customers"
+    secret_id: "prod/rds/mydb-credentials"
+transforms:
+  - type: sql
+    output: enriched
+    query: >
+      SELECT o.*, c.name, c.email
+      FROM orders o
+      LEFT JOIN customers c ON o.customer_id = c.id
+      WHERE o.status != 'cancelled'
+sink:
+  source: enriched
+  type: s3
+  format: parquet
+  path: "s3://my-bucket-${account.id}/curated/enriched_orders/"
+  mode: overwrite
