@@ -1,7 +1,9 @@
 type: glue
+
 imports:
   - name: "col"
     from: "pyspark.sql.functions"
+    
 sources:
   - name: orders
     type: s3
@@ -12,6 +14,7 @@ sources:
     connection_url: "jdbc:postgresql://my-rds.${region.id}.rds.amazonaws.com:5432/mydb"
     table: "public.customers"
     secret_id: "prod/rds/mydb-credentials"
+    
 transforms:
   - type: filter
     source: orders
